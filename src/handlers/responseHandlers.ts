@@ -76,13 +76,24 @@ export async function responseHandler(
   // Log content to be written
   const logContent = `${response.status}:${beijingTime}|${gatewayRequest.model}|${requestURL}\n`;
 
-  // Insert log content at the beginning of the file
+  // Read existing logs if the log file exists
+  let existingLogs = '';
   if (fs.existsSync(logFilePath)) {
-    const existingLogs = fs.readFileSync(logFilePath, 'utf-8');
-    fs.writeFileSync(logFilePath, logContent + existingLogs);
-  } else {
-    fs.writeFileSync(logFilePath, logContent);
-  }  
+    existingLogs = fs.readFileSync(logFilePath, 'utf-8');
+  }
+
+  // Combine the new log with existing logs
+  const allLogs = logContent + existingLogs;
+
+  // Split the logs into an array of lines
+  const logLines = allLogs.trim().split('\n');
+
+  // Keep only the first 1000 lines
+  const trimmedLogs = logLines.slice(0, 1000).join('\n');
+
+  // Write the trimmed logs back to the file
+  fs.writeFileSync(logFilePath, trimmedLogs);
+
   // Checking status 200 so that errors are not considered as stream mode.
   if (responseTransformer && streamingMode && response.status === 200) {
     responseTransformerFunction =
