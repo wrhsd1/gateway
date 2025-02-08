@@ -79,10 +79,13 @@ export async function responseHandler(
   }
   // Log content to be written
   const logContent = `${response.status}:${beijingTime}|${gatewayRequest.model}|${requestURL}\n`;
-  // Insert log content at the beginning of the file
+  
+  // Read existing logs and limit to latest 1000 entries
   if (fs.existsSync(logFilePath)) {
     const existingLogs = fs.readFileSync(logFilePath, 'utf-8');
-    fs.writeFileSync(logFilePath, logContent + existingLogs);
+    const logLines = existingLogs.split('\n').filter(line => line.trim());
+    const limitedLogs = [logContent.trim(), ...logLines.slice(0, 999)].join('\n') + '\n';
+    fs.writeFileSync(logFilePath, limitedLogs);
   } else {
     fs.writeFileSync(logFilePath, logContent);
   }  
